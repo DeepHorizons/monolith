@@ -1,3 +1,7 @@
+#! /usr/bin/env python
+"""
+Make a monolithic dockerfile from a given image name
+"""
 import requests
 from bs4 import BeautifulSoup
 import re
@@ -42,6 +46,9 @@ def get_from(dockerfile):
     return re.search(regex, dockerfile, re.MULTILINE).groups()[0]
 
 def get_tree(name):
+    """
+       Given an image name, get all the docker files that were used up to the root node
+    """
     dockerfile = get_dockerfile(name)
     # TODO get hash
     s = "### {} --- {}\n".format(name, str(datetime.datetime.now()))
