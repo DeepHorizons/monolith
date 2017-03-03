@@ -19,8 +19,11 @@ Simply pass in the image name in the form "user/image".
 The script will write it out to a file named `Monolith.txt` by default.
 To change that, set the `-f` or `--file` parameter.
 
+```
+monolith.py jupyterhub/jupyterhub
+```
 
 ## Notes
-This does not grab the exact dockerfile that was used, just the one that is available on dockerhub.
-Tags are currently ignored.
+* This does not grab the exact dockerfile that was used, just the one that is available on dockerhub.
+* Tags are currently ignored.
 
