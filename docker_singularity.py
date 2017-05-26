@@ -82,7 +82,8 @@ def docker_env_to_singularity(env):
     Get the string that will be used in singularity
     """
     name, value = re.search(r'(.*?)=(.*)', env).groups()  # Don't need this, but it may be helpful in the future
-    string =  "echo 'export {env}' >> /environment".format(env=env)
+    string =  """echo 'export {env}' >> /environment
+    export {env}""".format(env=env)
     return string
 
 
