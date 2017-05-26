@@ -25,9 +25,9 @@ From: {IMAGE}
     # commands to be executed when the container runs
     if [ -z "$1" ]
     then
-        exec bash
+        exec {ENTRYPOINT} {CMD}
     else
-        exec "$@"
+        exec {ENTRYPOINT} "$@"
     fi
 
 """
@@ -123,7 +123,36 @@ if __name__ == '__main__':
     full_image_name = image.gen_name() + '@{digest}'.format(digest=digest)
     envs = "echo '\\n' >> /environment\n    " + '\n    '.join(docker_env_to_singularity(i) for i in env)
 
-    singularity_file = FILE_TEMPLATE.format(IMAGE=full_image_name, ENVS=envs)
+    # Get all the history for this image
+    # It is in reverse order, ie. 0 is the last command
+    history = [' '.join(json.loads(i['v1Compatibility'])['container_config']['Cmd']) for i in image_history]
+    # Get the ENTRYPOINT
+    entrypoints = [i for i in history if 'ENTRYPOINT' in i]  # TODO is ENTRYPOINT always in caps?
+    entrypoint = entrypoints.pop(0) if len(entrypoints) > 0 else ''
+    if len(entrypoints) > 0:
+        entrypoint = entrypoints.pop(0)  # Grab the first entry
+        # Do some string manipulation to see what we need to do
+        entrypoint = entrypoint[entrypoint.find('ENTRYPOINT')+3:].strip()
+        if entrypoint.startswith('['):
+            entrypoint = ' '.join(re.findall(r'\[(.*)\]', cmd))  # Get everything in the brackets
+            entrypoint = ' '.join(cmd.replace('"', '').split(','))  # Flaten out the string
+        # If it's not in list form, don't do anything
+    else:
+        entrypoint = ''
+
+    cmds = [i for i in history if 'CMD' in i]  # TODO is CMD always in caps?
+    if len(cmds) > 0:
+        cmd = cmds.pop(0)  # Grab the first entry
+        # Do some string manipulation to see what we need to do
+        cmd = cmd[cmd.find('CMD')+3:].strip()
+        if cmd.startswith('['):
+            cmd = ' '.join(re.findall(r'\[(.*)\]', cmd))  # Get everything in the brackets
+            cmd = ' '.join(cmd.replace('"', '').split(','))  # Flaten out the string
+        # If it's not in list form, don't do anything
+    else:
+        cmd = ''
+
+    singularity_file = FILE_TEMPLATE.format(IMAGE=full_image_name, ENVS=envs, ENTRYPOINT=entrypoint, CMD=cmd)
     
     with open(args.file, 'w') as f:
         f.write(singularity_file)
