@@ -1,0 +1,47 @@
+#!/usr/bin/env python
+"""
+Make a monolithic dockerfile from a given image name
+"""
+import datetime
+import argparse
+import logging
+
+import monolith.image_types
+import monolith.parsers
+
+logging.basicConfig(level=logging.DEBUG)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="Make a monolithic Dockerfile")
+    parser.add_argument('-f', '--file', type=str, help="Where to write the file out to", default='Monolith.txt')
+    parser.add_argument('--make-singularity', action='store_true', help="Should we create an equivalent Singularity file instead?")
+    parser.add_argument('--singularity-bootstrap', help="Sets the Bootstrap field of the Singularity definition file", default='docker')
+    parser.add_argument('--singularity-from', help="Sets the From field of the Singularity definition file; Default is to use the root image from docker")
+    parser.add_argument('image_name', type=str, help="The name of the Docker image, as such: 'jupyterhub/jupyterhub'")
+    args = parser.parse_args()
+
+    root = monolith.image_types.DockerImage.get_tree(args.image_name)
+
+    def get_single_dockerfile(image):
+        """
+        Return a string that is the concatenation of all the dockerfiles related to `image`
+        """
+        if len(image.children) > 1 :
+            # TODO add functionality
+            raise Exception("No way to handle diverging trees yet")
+        return "### {name} --- {date}\n{current_dockerfile}\n{next}".format(name=image.name, date=str(datetime.datetime.now()),
+                                                                     current_dockerfile=image.dockerfile, next=get_single_dockerfile(list(image.children.values())[0]) if image.children else '')
+    monolith_file = get_single_dockerfile(root)
+    if args.make_singularity:
+        bootstrap = args.singularity_bootstrap
+        _from = args.singularity_from or root.name
+        print(bootstrap, _from)
+        
+        parser = monolith.parsers.DockerFileToSingularityFile(args.image_name, folder='./')
+        parser.parse(monolith_file)
+        parser.write_singularity_file(args.file)
+    else:
+        with open(args.file, 'w') as f:
+            f.write(monolith_file)
+
