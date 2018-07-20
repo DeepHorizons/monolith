@@ -35,7 +35,7 @@ From: {image}
     # Must be in the format
     #
     # <key> <value>
-    # PATH /bin
+    # VERSION 5
     {labels}
 
 
@@ -297,11 +297,7 @@ From: {image}
         """
         LABEL key1="value1 v3" key2=value2
         """
-        print('labels')
-        print(params)
-        print(len(params))
         pairs = self.get_key_value_pairs(params.strip())
-        print(pairs)
         for key, value in pairs:
             self.labels += '\n    {key} {value}'.format(key=key, value=value)
     
@@ -341,12 +337,12 @@ From: {image}
         We assume the dest is a file (1:1 relation of src and dest)
         TODO sometimes dest is just a dir
         """
-        print(' ADD params `{params}`'.format(params=params))
+        print(' ADD params `{params}`'.format(params=params.strip()))
         regex = r'([\S]+)'  # TODO doesnt allow " or space
         srcs = set()
         dest = None
         while params:
-            print(' ADD params `{params}`'.format(params=params))
+            #print(' ADD params `{params}`'.format(params=params))
             # Get one match, then do it again on the rest of the string
             m = re.match(regex, params)
             if not m:
