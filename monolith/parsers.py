@@ -78,7 +78,7 @@ From: {image}
 
 """
     # The first character doesn't get a slash, so we add it in the first one
-    PARAM_ALLOWABLE_CHARACTERS_REGEX = '\w\ \t\\' + '\\'.join("!@#$%^&*()-_=+[{]}\|;:'\",<.>/?")
+    PARAM_ALLOWABLE_CHARACTERS_REGEX = '\w\ \t\\' + '\\'.join("!@#$%^&*()-_=+[{]}\|;:'\",<.>/?~`")
     PARAM_PATTERN = r'(?:[{PARAM_ALLOWABLE_CHARACTERS_REGEX}]+\s*\\\s*)*(?:[{PARAM_ALLOWABLE_CHARACTERS_REGEX}]+)\n'.format(PARAM_ALLOWABLE_CHARACTERS_REGEX=PARAM_ALLOWABLE_CHARACTERS_REGEX)
     SEARCH_PATTERN = r'^\s*(\w+)\s+({PARAM_PATTERN})'.format(PARAM_PATTERN=PARAM_PATTERN)
 
@@ -132,8 +132,8 @@ From: {image}
                 code = code[code.find('\n'):]
                 continue
             inst, params = m.groups()
-            print('inst: `{inst}`; params: `{params}`'.format(inst=inst, params=params))
-            self.post += '\n    # {inst} {params}'.format(inst=inst, params=params[:30 if len(params) > 30 else len(params)].strip())
+            print('inst: `{inst}`; params: `{params}`'.format(inst=inst, params=params.strip()))
+            self.post += '\n    # {inst} {params}'.format(inst=inst, params=params[:min([30, params.find('\n')]) if len(params) > 30 else len(params)].strip() + '...' if len(params) > 30 else '')
             op = self.ops[inst]
             op(params)
             
@@ -200,13 +200,14 @@ From: {image}
         params = ' '.join((line.replace('\\', '').strip() for line in params.splitlines()))
         no_double_quotes = self.PARAM_ALLOWABLE_CHARACTERS_REGEX.replace('\"', '')
         regex = r'([\w\.\d]+)[=\s+]((?:[{no_double_quotes}]+)|(?:\"[{no_double_quotes}]+\"))'.format(no_double_quotes=no_double_quotes)
-        print(regex.encode())
+        regex = self.SEARCH_PATTERN.replace('\"', '')
+        regex = r'([\w\.\d]+)[=\s+]?((?:[{no_double_quotes}]+)|(?:\"[{no_double_quotes}]+\"))?'.format(no_double_quotes=no_double_quotes)
         pairs = []
         while params:
             # Get one match, then do it again on the rest of the string
             m = re.match(regex, params)
             if not m:
-                raise Exception("Malformed params for LABEL: {params}".format(params=params.encode()))
+                raise Exception("Malformed params: {params}".format(params=params.encode()))
             key, value = m.groups()
             pairs.append((key, value))
             params = params[m.span()[1]:].strip()
