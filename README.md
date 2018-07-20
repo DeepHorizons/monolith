@@ -1,5 +1,7 @@
 # Monolith
-Monolith is a python file for creating monolithic Dockerfiles that can be used for verification of an image.
+
+Monolith is a script and python package for creating monolithic Dockerfiles and
+for generating Singularity definition files from Dockerfiles.
 
 
 ## Installation
@@ -22,6 +24,15 @@ To change that, set the `-f` or `--file` parameter.
 ```
 monolith.py jupyterhub/jupyterhub
 ```
+
+## Singularity Definition File
+You can use monolith to create a dingularity file. To do so, pass the
+`--make-singularity` flag. It will then create an equivalent singularity file
+from the dockerfile.
+
+You can also pass in `--singularity-bootstrap` and `--singularity-from` to set
+the Singularity definition files `Bootstrap` and `From` field.
+
 
 ## Notes
 * This does not grab the exact dockerfile that was used, just the one that is available on dockerhub.
