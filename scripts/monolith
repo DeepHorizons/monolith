@@ -40,7 +40,11 @@ if __name__ == '__main__':
         
         parser = monolith.parsers.DockerFileToSingularityFile(args.image_name, folder='./')
         parser.parse(monolith_file)
+        parser.bootstrap = bootstrap
+        parser.image = _from
         parser.write_singularity_file(args.file)
+        with open(args.file + '.Dockerfile', 'w') as f:
+            f.write(monolith_file)
     else:
         with open(args.file, 'w') as f:
             f.write(monolith_file)
