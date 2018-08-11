@@ -5,6 +5,7 @@ Make a monolithic dockerfile from a given image name
 import datetime
 import argparse
 import logging
+import sys
 
 import monolith.image_types
 import monolith.parsers
@@ -33,6 +34,7 @@ if __name__ == '__main__':
         return "### {name} --- {date}\n{current_dockerfile}\n{next}".format(name=image.name, date=str(datetime.datetime.now()),
                                                                      current_dockerfile=image.dockerfile, next=get_single_dockerfile(list(image.children.values())[0]) if image.children else '')
     monolith_file = get_single_dockerfile(root)
+    monolith_file = "# Created with `{argv}`\n".format(argv=sys.argv) + monolith_file
     if args.make_singularity:
         bootstrap = args.singularity_bootstrap
         _from = args.singularity_from or root.name
