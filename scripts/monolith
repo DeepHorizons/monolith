@@ -34,7 +34,7 @@ if __name__ == '__main__':
         return "### {name} --- {date}\n{current_dockerfile}\n{next}".format(name=image.name, date=str(datetime.datetime.now()),
                                                                      current_dockerfile=image.dockerfile, next=get_single_dockerfile(list(image.children.values())[0]) if image.children else '')
     monolith_file = get_single_dockerfile(root)
-    monolith_file = "# Created with `{argv}`\n".format(argv=sys.argv) + monolith_file
+    file_prefix = "# Created with `{argv}`\n".format(argv=' '.join(sys.argv))
     if args.make_singularity:
         bootstrap = args.singularity_bootstrap
         _from = args.singularity_from or root.name
@@ -44,9 +44,10 @@ if __name__ == '__main__':
         parser.parse(monolith_file)
         parser.bootstrap = bootstrap
         parser.image = _from
-        parser.write_singularity_file(args.file)
+        with open(args.file, 'w') as f:
+            f.write(file_prefix + parser.singularity_file())
         with open(args.file + '.Dockerfile', 'w') as f:
-            f.write(monolith_file)
+            f.write(file_prefix + monolith_file)
     else:
         with open(args.file, 'w') as f:
             f.write(monolith_file)
