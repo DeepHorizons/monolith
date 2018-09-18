@@ -132,8 +132,11 @@ From: {image}
                 code = code[code.find('\n'):]
                 continue
             inst, params = m.groups()
+            # Remove any extra lines in params
+            # XXX Need to find a better way to do this
+            params = '\n'.join([line for line in params.split('\n') if line.split()]) + '\n'
             print('inst: `{inst}`; params: `{params}`'.format(inst=inst, params=params.strip()))
-            self.post += '\n    # {inst} {params}'.format(inst=inst, params=params[:min([30, params.find('\n')]) if len(params) > 30 else len(params)].strip() + '...' if len(params) > 30 else '')
+            self.post += '\n    # {inst} {params}'.format(inst=inst, params=params.replace('\\', '').replace('\'', '').replace('"', '')[:min([30, params.find('\n')]) if len(params) > 30 else len(params)].strip() + '...' if len(params) > 30 else '')
             op = self.ops[inst]
             op(params)
             
