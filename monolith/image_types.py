@@ -14,6 +14,9 @@ class DockerImage:
         self.children = children if children else {}
         self.parent = parent if parent else None
 
+    def __repr__(self):
+        return "<DockerImage {name}>".format(name=self.name)
+
     def is_root(self):
         return True if self.parent else False
 
@@ -139,3 +142,6 @@ class DockerImage:
         info = self.get_docker_info(self.name)
         return "{user}/{image}".format(user=info.user, image=info.image)
 
+if __name__ == '__main__':
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
