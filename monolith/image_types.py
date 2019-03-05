@@ -2,6 +2,8 @@ import logging
 import re
 import requests
 
+import parsers
+
 BASE_URL = "https://hub.docker.com/v2/repositories/{user}/{image}/"
 DOCKERFILE_URL = BASE_URL + "dockerfile/"
 
@@ -75,8 +77,10 @@ class DockerImage:
         curr_img = cls(name=name)
         dockerfile = cls.get_dockerfile(name)
         curr_img.dockerfile = dockerfile
+        m = parsers.DockerFileToSingularityFile(name)
+        m.parse(dockerfile)
         while dockerfile:
-            name = cls.get_from(dockerfile)  # Get the next image name
+            name = m.image  # Get the next image name
             new_img = cls(name=name)
 
             # Update references
@@ -87,6 +91,8 @@ class DockerImage:
             # Get next iteration
             dockerfile = cls.get_dockerfile(name)
             curr_img.dockerfile = dockerfile
+            m = parsers.DockerFileToSingularityFile(name)
+            m.parse(dockerfile)
         return curr_img
 
     @staticmethod
