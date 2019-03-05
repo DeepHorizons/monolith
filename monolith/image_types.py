@@ -117,7 +117,12 @@ class DockerImage:
         regex = r"^(?:([\w\-\d\.]+)\/)?([\w\-\d\.]+)(?:[:|\@]([@:\w\-\d\.]+))?$"
 
         # Get the values, set default ones if need be
-        user, image, tag = re.match(regex, name).groups()
+        try:
+            user, image, tag = re.match(regex, name).groups()
+        except AttributeError:
+            logging.error("Could not locate docker info with `{name}`".format(name=name))
+            raise
+
         if user is None:
             # TODO XXX This may be `library` OR `_` depending on some external stuff
             #user = 'library'
