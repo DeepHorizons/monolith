@@ -1,10 +1,9 @@
 import logging
 import re
-from bs4 import BeautifulSoup
 import requests
 
-BASE_URL = "https://hub.docker.com/r/{user}/{image}/"
-DOCKERFILE_URL = BASE_URL + "~/dockerfile/"
+BASE_URL = "https://hub.docker.com/v2/repositories/{user}/{image}/"
+DOCKERFILE_URL = BASE_URL + "dockerfile/"
 
 class DockerImage:
     def __init__(self, name, dockerfile = None, children = None, parent = None):
@@ -45,23 +44,17 @@ class DockerImage:
         # Make a call out to get the page
         logging.debug("Getting from dockerhub")
         result = requests.get(DOCKERFILE_URL.format(user=info.user, image=info.image))
+        # Didnt get a file, 404
+        if result.status_code == 404:
+            logging.warning("Could not find dockerfile for '{user}/{image}'".format(user=info.user, image=info.image))
+            return ''
+        elif result.status_code != 200:
+            logging.warning("Did not get 200 status code for {user}/{image}; {rst}".format(user=info.user, image=info.image, rst=result.status_code))
+            return ''
         logging.debug("request complete")
-        # Make sure we got a page, dockerhub does not return a 404 if the page does not exist
-        if 'RouteNotFound404Page' in result.content.decode():
-            logging.error('Unable to get dockerfile from {}'.format(name))
-            return ''
+        logging.debug(result.json())
+        text = result.json()['contents']
 
-        # Parse it, get the span that has the dockerfile text
-        logging.debug("Parsing html")
-        soup = BeautifulSoup(result.content, "html.parser")
-        block = soup.select('div[class*="hljs"]')
-        if not block:
-            logging.warning("No block")
-            return ''
-        if len(block) > 1:
-            logging.warning("Multiple blocks found; Using first")
-
-        text = block[0].text  # .text removes any html tags
         logging.debug("complete: ---")
         logging.debug(text)
         logging.debug("---")
