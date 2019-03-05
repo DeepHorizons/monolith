@@ -239,11 +239,12 @@ From: {image}
             return
         for key in self._environment:
             # ${variable} format
-            s = '${{{key}}}'.format(key=key)
-            if s in params:
-                # Do replacement
-                params = params.replace(s, self._environment[key])
-                continue
+            search_list = ['${key}'.format(key=key), '${{{key}}}'.format(key=key)]
+            for s in search_list:
+                if s in params:
+                    # Do replacement
+                    params = params.replace(s, self._environment[key])
+                    continue
             
 
         # Encountering a new FROM clears all state
