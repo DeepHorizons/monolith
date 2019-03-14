@@ -2,7 +2,10 @@ import logging
 import re
 import requests
 
-import parsers
+try:
+    import parsers
+except ModuleNotFoundError:
+    import monolith.parsers as parsers
 
 BASE_URL = "https://hub.docker.com/v2/repositories/{user}/{image}/"
 DOCKERFILE_URL = BASE_URL + "dockerfile/"
