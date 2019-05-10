@@ -113,25 +113,13 @@ From: {image}
     def parse(self, code):
         self.dockerfile_code.append(code)
 
-        # Remove all one lined comments
-        _rm = lambda line: line[:line.find('#') if line.find('#') >= 0 else len(line)]
-        code = '\n'.join((_rm(line) for line in code.splitlines()))
-        
-        while code:
-            m = re.match(self.SEARCH_PATTERN, code)
-            if not m:
-                if not code.endswith('\n'):
-                    code += '\n'
-                    continue
-                print(code, len(code))
-                print("not matching")
-                # Skip the line
-                if len(code) <= 1:
-                    # Make sure we stop if we have one character left
-                    break
-                code = code[code.find('\n'):]
-                continue
-            inst, params = m.groups()
+        # Remove all comment lines
+        code = '\n'.join([line for line in code.split('\n') if not re.match(r'^\s*#', line)])
+        # Need an empty line at the end
+        if not code.endswith('\n'):
+            code += '\n'
+
+        for inst, params in re.findall(self.SEARCH_PATTERN, code, re.MULTILINE):
             # Remove any extra lines in params
             # XXX Need to find a better way to do this
             params = '\n'.join([line for line in params.split('\n') if line.split()]) + '\n'
@@ -139,8 +127,7 @@ From: {image}
             self.post += '\n    # {inst} {params}'.format(inst=inst, params=params.replace('\\', '').replace('\'', '').replace('"', '')[:min([30, params.find('\n')]) if len(params) > 30 else len(params)].strip() + '...' if len(params) > 30 else '')
             op = self.ops[inst]
             op(params)
-            
-            code = code[m.span()[1]:]
+
 
     def singularity_file(self):
         """
