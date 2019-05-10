@@ -326,6 +326,11 @@ From: {image}
         ENV <key>=<value> ...
         """
         for key,value in self.get_key_value_pairs(params):
+            # If we have some args then replace them when nessesary
+            if value.startswith('$'):
+                _tmpvalue = value.replace('$', '')
+                if _tmpvalue in self._environment:
+                    value = self._environment[_tmpvalue]
             self.post += '\n    echo \'export {key}={value}\' >> $SINGULARITY_ENVIRONMENT'.format(key=key, value=value)
             self.post += '\n    export {key}={value}'.format(key=key, value=value)
 
